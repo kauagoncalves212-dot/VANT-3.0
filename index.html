@@ -1,0 +1,243 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101010">
+<title>VANT 3.0</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#101010;color:#f7f7f7;font-family:Arial,sans-serif}
+header{padding:22px 18px;background:#171717;border-bottom:1px solid #393021}
+.brand{color:#ffc629;font-size:25px;font-weight:900}
+.sub{color:#999;font-size:12px;margin-top:5px}
+main{padding:18px;max-width:650px;margin:auto;padding-bottom:100px}
+h2{font-size:19px}
+.gold{color:#ffc629}
+.tabs{display:flex;gap:8px;margin:18px 0;overflow:auto}
+button{border:0;border-radius:10px;padding:12px;background:#292929;color:white;font-weight:bold;cursor:pointer}
+button.active,.primary{background:#ffc629;color:#171717}
+.panel{background:#1b1b1b;border:1px solid #39332a;border-radius:16px;padding:16px;margin-bottom:14px}
+.balance{font-size:30px;font-weight:bold;margin:8px 0}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:#242424;padding:13px;border-radius:12px}
+.stat small{color:#aaa}
+.stat strong{display:block;font-size:19px;margin-top:7px}
+input,select{width:100%;padding:13px;margin:7px 0 13px;border-radius:9px;border:1px solid #444;background:#111;color:white;font-size:15px}
+label{font-size:13px;color:#ccc}
+.action{width:100%;margin-top:5px}
+.item{padding:12px 0;border-bottom:1px solid #333;display:flex;justify-content:space-between;gap:10px}
+.muted{color:#999;font-size:12px}
+.progress{height:9px;background:#333;border-radius:20px;overflow:hidden;margin:10px 0}
+.progress div{height:100%;background:#ffc629;width:0}
+nav{position:fixed;bottom:0;left:0;right:0;background:#191919;border-top:1px solid #393939;display:flex;justify-content:space-around;padding:12px 4px}
+nav button{background:none;padding:8px 5px;font-size:11px}
+nav button.active{color:#ffc629;background:none}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<header>
+ <div class="brand">◆ VANT 3.0</div>
+ <div class="sub">SEU CONTROLE FINANCEIRO E DE VENDAS</div>
+</header>
+<main>
+ <div class="tabs">
+  <button id="personal" class="active" onclick="changeArea('pessoal')">Pessoal</button>
+  <button id="business" onclick="changeArea('negocio')">Meu negócio</button>
+ </div>
+
+ <section id="home">
+  <div class="panel">
+   <div class="muted">SALDO DO AMBIENTE</div>
+   <div class="balance" id="balance">R$ 0,00</div>
+   <div class="stats">
+    <div class="stat"><small>Entradas</small><strong id="income">R$ 0,00</strong></div>
+    <div class="stat"><small>Saídas</small><strong id="expense">R$ 0,00</strong></div>
+   </div>
+  </div>
+  <div class="panel">
+   <h2>🎯 Minha meta mensal</h2>
+   <label>Meta em reais</label>
+   <input id="goal" type="number" min="0" placeholder="Ex.: 3000">
+   <label>Dias que pretende trabalhar no mês</label>
+   <input id="days" type="number" min="1" placeholder="Ex.: 20">
+   <button class="primary action" onclick="saveGoal()">Calcular minha meta</button>
+   <p id="goalResult" class="gold"></p>
+  </div>
+  <div class="panel">
+   <h2>Últimas movimentações</h2>
+   <div id="recent" class="muted">Nenhuma movimentação registrada.</div>
+  </div>
+ </section>
+
+ <section id="sales" class="hidden">
+  <div class="panel">
+   <h2>📦 Cadastrar produto</h2>
+   <label>Nome do produto</label>
+   <input id="productName" placeholder="Ex.: Açaí 300 ml">
+   <label>Custo por unidade (R$)</label>
+   <input id="productCost" type="number" min="0" step=".01" placeholder="Ex.: 4.00">
+   <label>Preço de venda (R$)</label>
+   <input id="productPrice" type="number" min="0" step=".01" placeholder="Ex.: 10.00">
+   <label>Quantidade em estoque</label>
+   <input id="productStock" type="number" min="0" placeholder="Ex.: 50">
+   <button class="primary action" onclick="addProduct()">Salvar produto</button>
+  </div>
+  <div class="panel">
+   <h2>Meus produtos</h2>
+   <div id="products" class="muted">Nenhum produto cadastrado.</div>
+  </div>
+  <div class="panel">
+   <h2>🛒 Registrar venda</h2>
+   <label>Produto</label>
+   <select id="saleProduct"><option value="">Escolha um produto</option></select>
+   <label>Quantidade vendida</label>
+   <input id="saleQty" type="number" min="1" value="1">
+   <button class="primary action" onclick="sell()">Registrar venda</button>
+   <p class="muted">A venda atualiza o estoque e registra o faturamento e o custo.</p>
+  </div>
+ </section>
+
+ <section id="entries" class="hidden">
+  <div class="panel">
+   <h2>💰 Novo lançamento</h2>
+   <label>Tipo</label>
+   <select id="entryType">
+    <option value="receita">Receita / Entrada</option>
+    <option value="despesa">Despesa / Saída</option>
+   </select>
+   <label>Descrição</label>
+   <input id="entryName" placeholder="Ex.: Salário, transporte, compra">
+   <label>Valor (R$)</label>
+   <input id="entryValue" type="number" min="0.01" step=".01" placeholder="0,00">
+   <button class="primary action" onclick="addEntry()">Salvar lançamento</button>
+  </div>
+  <div class="panel">
+   <h2>Histórico</h2>
+   <div id="history" class="muted">Sem lançamentos.</div>
+  </div>
+ </section>
+
+ <section id="schedule" class="hidden">
+  <div class="panel">
+   <h2>📅 Minha agenda de vendas</h2>
+   <label>Dia de trabalho</label>
+   <input id="workDate" type="date">
+   <label>Horário de saída</label>
+   <input id="startTime" type="time">
+   <label>Horário de retorno</label>
+   <input id="endTime" type="time">
+   <button class="primary action" onclick="addSchedule()">Salvar dia de trabalho</button>
+  </div>
+  <div class="panel">
+   <h2>Meus dias programados</h2>
+   <div id="agenda" class="muted">Nenhum dia programado.</div>
+  </div>
+ </section>
+
+ <section id="hunt" class="hidden">
+  <div class="panel">
+   <h2>🚦 CAÇA-SINAL</h2>
+   <p class="muted">Encontre cruzamentos e organize seus pontos de venda.</p>
+   <button class="primary action" onclick="locate()">📍 Usar minha localização</button>
+   <p id="location" class="muted">Localização ainda não informada.</p>
+   <label>Buscar bairro, rua ou avenida</label>
+   <input id="place" placeholder="Ex.: Barra Funda">
+   <label>Raio de busca</label>
+   <select id="radius">
+    <option>2 km</option><option>5 km</option><option>10 km</option>
+   </select>
+   <p class="muted">A localização será o ponto de partida. A identificação de semáforos, tempos de sinal e vendas coletivas exige uma base de dados própria, que será integrada nas próximas etapas.</p>
+  </div>
+ </section>
+</main>
+<nav>
+ <button class="active" onclick="show('home',this)">⌂<br>Início</button>
+ <button onclick="show('sales',this)">▣<br>Produtos</button>
+ <button onclick="show('entries',this)">＋<br>Lançamentos</button>
+ <button onclick="show('schedule',this)">▦<br>Agenda</button>
+ <button onclick="show('hunt',this)">🚦<br>Caça-Sinal</button>
+</nav>
+<script>
+const key='vant30_data';
+let data=JSON.parse(localStorage.getItem(key)||'null')||{
+ entries:[],products:[],sales:[],agenda:[],goals:{}
+};
+let area='pessoal';
+function save(){localStorage.setItem(key,JSON.stringify(data));render()}
+function money(n){return Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
+function changeArea(a){
+ area=a;
+ document.getElementById('personal').classList.toggle('active',a==='pessoal');
+ document.getElementById('business').classList.toggle('active',a==='negocio');
+ render();
+}
+function show(id,btn){
+ document.querySelectorAll('main section').forEach(s=>s.classList.add('hidden'));
+ document.getElementById(id).classList.remove('hidden');
+ document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+ btn.classList.add('active');render();
+}
+function addEntry(){
+ let name=entryName.value.trim(),value=Number(entryValue.value);
+ if(!name||value<=0)return alert('Preencha a descrição e o valor.');
+ data.entries.push({area,name,value,type:entryType.value,date:new Date().toISOString()});
+ entryName.value='';entryValue.value='';save();
+}
+function addProduct(){
+ let name=productName.value.trim(),cost=Number(productCost.value),price=Number(productPrice.value),stock=Number(productStock.value);
+ if(!name||cost<0||price<=0||stock<0)return alert('Confira os dados do produto.');
+ data.products.push({id:Date.now(),area,name,cost,price,stock,sold:0});
+ productName.value='';productCost.value='';productPrice.value='';productStock.value='';save();
+}
+function sell(){
+ let p=data.products.find(x=>x.id===Number(saleProduct.value)&&x.area===area);
+ let qty=Number(saleQty.value);
+ if(!p||qty<=0)return alert('Escolha um produto e quantidade.');
+ if(qty>p.stock)return alert('Estoque insuficiente.');
+ p.stock-=qty;p.sold+=qty;
+ data.sales.push({area,name:p.name,qty,revenue:p.price*qty,cost:p.cost*qty,date:new Date().toISOString()});
+ save();alert('Venda registrada!');
+}
+function saveGoal(){
+ let goal=Number(document.getElementById('goal').value),days=Number(document.getElementById('days').value);
+ if(goal<=0||days<=0)return alert('Informe a meta e os dias de trabalho.');
+ data.goals[area]={goal,days};save();
+}
+function addSchedule(){
+ if(!workDate.value||!startTime.value||!endTime.value)return alert('Preencha a data e os horários.');
+ data.agenda.push({area,date:workDate.value,start:startTime.value,end:endTime.value});
+ save();
+}
+function locate(){
+ if(!navigator.geolocation)return alert('Seu navegador não oferece localização.');
+ navigator.geolocation.getCurrentPosition(pos=>{
+  document.getElementById('location').textContent='Localização: '+pos.coords.latitude.toFixed(4)+', '+pos.coords.longitude.toFixed(4);
+ },()=>alert('Não foi possível acessar sua localização. Confira a permissão do navegador.'));
+}
+function render(){
+ let es=data.entries.filter(x=>x.area===area);
+ let sales=data.sales.filter(x=>x.area===area);
+ let income=es.filter(x=>x.type==='receita').reduce((s,x)=>s+x.value,0)+sales.reduce((s,x)=>s+x.revenue,0);
+ let expense=es.filter(x=>x.type==='despesa').reduce((s,x)=>s+x.value,0)+sales.reduce((s,x)=>s+x.cost,0);
+ document.getElementById('balance').textContent=money(income-expense);
+ document.getElementById('income').textContent=money(income);
+ document.getElementById('expense').textContent=money(expense);
+ let recent=[...es.map(x=>({...x,amount:x.value})),...sales.map(x=>({...x,name:'Venda: '+x.name,amount:x.revenue,type:'receita'}))].slice(-5).reverse();
+ document.getElementById('recent').innerHTML=recent.length?recent.map(x=>`<div class="item"><span>${x.name}</span><b class="gold">${money(x.amount)}</b></div>`).join(''):'Nenhuma movimentação registrada.';
+ let ps=data.products.filter(x=>x.area===area);
+ document.getElementById('products').innerHTML=ps.length?ps.map(p=>`<div class="item"><span>${p.name}<br><small class="muted">Estoque: ${p.stock} · Vendidos: ${p.sold}<br>Lucro/unidade: ${money(p.price-p.cost)}</small></span><b>${money(p.price)}</b></div>`).join(''):'Nenhum produto cadastrado.';
+ document.getElementById('saleProduct').innerHTML='<option value="">Escolha um produto</option>'+ps.map(p=>`<option value="${p.id}">${p.name} (${p.stock} em estoque)</option>`).join('');
+ document.getElementById('history').innerHTML=es.length?es.slice().reverse().map(x=>`<div class="item"><span>${x.name}<br><small class="muted">${x.type}</small></span><b>${money(x.value)}</b></div>`).join(''):'Sem lançamentos.';
+ let g=data.goals[area];
+ document.getElementById('goalResult').textContent=g?`Meta diária: ${money(g.goal/g.days)} · Meta semanal estimada: ${money(g.goal/4)}`:'Sua meta aparecerá aqui.';
+ let ag=data.agenda.filter(x=>x.area===area);
+ document.getElementById('agenda').innerHTML=ag.length?ag.slice().reverse().map(x=>`<div class="item">${x.date} · ${x.start} às ${x.end}</div>`).join(''):'Nenhum dia programado.';
+}
+render();
+</script>
+</body>
+  </html>
+     
